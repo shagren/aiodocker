@@ -13,7 +13,7 @@ from yarl import URL
 # Sub-API classes
 from .containers import DockerContainer, DockerContainers
 from .events import DockerEvents
-from .exceptions import DockerError
+from .exceptions import DockerConnectionError, DockerError
 from .images import DockerImages
 from .logs import DockerLog
 from .networks import DockerNetwork, DockerNetworks
@@ -198,6 +198,8 @@ class Docker:
             )
         except asyncio.TimeoutError:
             raise
+        except aiohttp.ClientConnectorError as error:
+            raise DockerConnectionError(error, self.connector, self.docker_host)
         if (response.status // 100) in [4, 5]:
             what = await response.read()
             content_type = response.headers.get("content-type", "")
